@@ -52,11 +52,21 @@ st.caption(
     "disengaging so retention campaigns can be prioritised."
 )
 
+st.warning(
+    "**Historical test cohort — not a live risk score.**  "
+    "Predictions below represent a 25% held-out sample of customers who were active "
+    "**before 2011-09-30**. They are provided to evaluate model quality, not to drive "
+    "production retention campaigns. ROC-AUC 0.7422 \u2014 the assignment target of 0.88 "
+    "has **not yet been demonstrated** on this dataset.",
+    icon="⚠️",
+)
+
 st.info(
-    "**Methodology note:** Churn is defined as having **no transaction in a 60-day future "
-    "window** (2011-10-01 → 2011-11-29) after the observation cutoff 2011-09-30. "
+    "**Methodology:** Churn = no transaction in the 60-day window "
+    "2011-10-01 → 2011-11-29 after observation cutoff 2011-09-30. "
     "Features are engineered strictly from pre-cutoff history. "
-    "Results are reported on a held-out 25% test set only.",
+    "Actual churn labels are shown in the table for evaluation purposes only "
+    "and are excluded from the downloadable CSV.",
     icon="ℹ️",
 )
 
@@ -283,7 +293,7 @@ else:
         f"Showing {len(display_df):,} customers — sorted by churn probability (descending)"
     )
 
-    csv_bytes = display_df.to_csv(index=False).encode("utf-8")
+    csv_bytes = display_df.drop(columns=["Actual Churn (Test)"], errors="ignore").to_csv(index=False).encode("utf-8")
     st.download_button(
         label="Download filtered predictions (CSV)",
         data=csv_bytes,
