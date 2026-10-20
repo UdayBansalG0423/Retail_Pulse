@@ -18,14 +18,24 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from src.churn.churn_prediction import (
-    precision_at_top_fraction,
-    PREDICTIONS_CSV,
-    METRICS_JSON,
-)
+try:
+    from src.churn.churn_prediction import (
+        precision_at_top_fraction,
+        PREDICTIONS_CSV,
+        METRICS_JSON,
+    )
+    CHURN_AVAILABLE = True
+    _SKIP_REASON = ""
+except ModuleNotFoundError as _e:
+    CHURN_AVAILABLE = False
+    _SKIP_REASON = f"Optional dependency not installed: {_e}. Run: pip install xgboost shap"
 
 
+@unittest.skipUnless(CHURN_AVAILABLE, _SKIP_REASON)
 class TestChurnPrediction(unittest.TestCase):
+    """Tests for churn_prediction.py.
+    Skipped automatically when xgboost / shap are not installed in the test runner.
+    """
 
     def test_precision_at_top_fraction_calculation(self):
         """Test 1: Precision@top-fraction correctly computes accuracy among top-ranked."""
