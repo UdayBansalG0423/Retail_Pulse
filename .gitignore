@@ -8,15 +8,20 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Data
+# Data — raw and large processed files excluded; demo artifacts committed separately
 data/raw/*
 data/processed/*
 
-# Models
+# Reports — SHAP and other generated images/CSVs tracked (small)
+!reports/churn/
+!reports/churn/**
+
+# Models — track lightweight JSON/ONNX, ignore large binary blobs
 models/*.pkl
 models/*.joblib
 models/*.pt
 models/*.pth
+# churn_xgb.json (~415 KB) is intentionally tracked — do NOT add *.json here
 
 # Environment variables
 .env

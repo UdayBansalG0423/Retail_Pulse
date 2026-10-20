@@ -1,0 +1,53 @@
+name: RetailPulse Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    name: Full test suite (Python 3.11)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install core dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install \
+            "pandas>=2.2.0,<3.0" \
+            "numpy>=1.26.0,<2.3" \
+            "openpyxl>=3.1.0" \
+            "matplotlib>=3.8.0" \
+            "seaborn>=0.13.0" \
+            "scikit-learn>=1.4.0" \
+            "scipy>=1.12.0" \
+            "streamlit>=1.35.0" \
+            "ucimlrepo==0.0.7"
+
+      - name: Install optional ML dependencies (xgboost, shap, prophet)
+        # Failures here do not block the core regression tests.
+        # Churn tests are guarded with @unittest.skipUnless(CHURN_AVAILABLE).
+        continue-on-error: true
+        run: |
+          pip install \
+            "xgboost>=2.0.0" \
+            "shap>=0.45.0" \
+            "prophet>=1.1.5"
+
+      - name: Compile Python files
+        run: python -m compileall -q src dashboard tests
+
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
