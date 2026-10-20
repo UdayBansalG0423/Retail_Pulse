@@ -21,15 +21,34 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Install core dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install \
+            "pandas>=2.2.0,<3.0" \
+            "numpy>=1.26.0,<2.3" \
+            "openpyxl>=3.1.0" \
+            "matplotlib>=3.8.0" \
+            "seaborn>=0.13.0" \
+            "scikit-learn>=1.4.0" \
+            "scipy>=1.12.0" \
+            "streamlit>=1.35.0" \
+            "ucimlrepo==0.0.7"
+
+      - name: Install optional ML dependencies (xgboost, shap, prophet)
+        # Failures here do not block the core regression tests — churn tests
+        # are guarded with @unittest.skipUnless(CHURN_AVAILABLE, ...).
+        continue-on-error: true
+        run: |
+          pip install \
+            "xgboost>=2.0.0" \
+            "shap>=0.45.0" \
+            "prophet>=1.1.5"
 
       - name: Compile Python sources
         run: |
           python -m compileall -q src dashboard tests
 
-      - name: Execute unit test suite (16 tests)
+      - name: Execute unit test suite
         run: |
           python -m unittest discover -s tests -v
