@@ -1,13 +1,15 @@
 """
-3_Inventory_Optimization.py
----------------------------
-Streamlit decision-support page for RetailPulse inventory optimization.
+4_Inventory_Dashboard.py
+------------------------
+RetailPulse — Page 4: Inventory Replenishment & Decision Support
+
 Provides:
-  - Reorder alerts and urgency metrics
+  - Demand-driven reorder recommendations and urgency alerts
   - Inventory position vs. Reorder Point (ROP) and Target Stock comparisons
-  - Daily demand forecast curve drill-down
-  - What-if simulation parameters
-  - CSV export for procurement planning
+  - Days of stock coverage vs. supplier lead time
+  - SKU demand forecast drill-downs
+  - Interactive What-If Scenario Simulator
+  - Continuous-review Target Stock policy formulas & CSV export
 """
 
 from pathlib import Path
@@ -16,7 +18,6 @@ import pandas as pd
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# Apply dark theme styling to matplotlib to match dashboard aesthetics
 plt.style.use("dark_background")
 
 # Path setup: dashboard/pages -> dashboard -> RetailPulse root
@@ -27,13 +28,15 @@ FORECAST_FILE = DATA_DIR / "forecast_30_day.csv"
 INVENTORY_FILE = DATA_DIR / "sample_inventory.csv"
 
 st.set_page_config(
-    page_title="RetailPulse | Inventory Optimization",
+    page_title="RetailPulse | Inventory Dashboard",
     page_icon="📦",
     layout="wide",
 )
 
 st.title("📦 Inventory Optimization & Replenishment")
-st.caption("AI-powered demand-driven replenishment recommendations for retail procurement.")
+st.caption(
+    "AI-powered demand-driven replenishment recommendations for retail procurement."
+)
 
 # Demo data banner
 st.warning(
@@ -207,30 +210,36 @@ with tab2:
         y_pos = range(len(products_short))
         bar_width = 0.25
 
-        ax1.barh([y - bar_width for y in y_pos], filtered_df["inventory_position"], height=bar_width, label="Inv Position (IP)", color="#3498DB")
-        ax1.barh(y_pos, filtered_df["reorder_point"], height=bar_width, label="Reorder Point (ROP)", color="#E74C3C")
-        ax1.barh([y + bar_width for y in y_pos], filtered_df["target_stock"], height=bar_width, label="Target Stock (T)", color="#2ECC71")
+        ax1.barh([y - bar_width for y in y_pos], filtered_df["inventory_position"], height=bar_width, label="Inv Position (IP)", color="#38bdf8")
+        ax1.barh(y_pos, filtered_df["reorder_point"], height=bar_width, label="Reorder Point (ROP)", color="#ef4444")
+        ax1.barh([y + bar_width for y in y_pos], filtered_df["target_stock"], height=bar_width, label="Target Stock (T)", color="#10b981")
 
         ax1.set_yticks(y_pos)
-        ax1.set_yticklabels(products_short, fontsize=9)
-        ax1.set_xlabel("Units", fontsize=10)
-        ax1.set_title("Inventory Position vs ROP & Target Stock", fontsize=11, fontweight="bold")
-        ax1.grid(axis="x", linestyle="--", alpha=0.3)
+        ax1.set_yticklabels(products_short, fontsize=9, color="white")
+        ax1.set_xlabel("Units", fontsize=10, color="white")
+        ax1.set_title("Inventory Position vs ROP & Target Stock", fontsize=11, fontweight="bold", color="white")
+        ax1.grid(axis="x", linestyle="--", alpha=0.25)
         ax1.legend(loc="lower right", fontsize=9)
+        ax1.set_facecolor("#0e1117")
+        ax1.tick_params(colors="white")
 
         # Chart 2: Days of Stock Cover vs Supplier Lead Time
-        ax2.barh([y - 0.15 for y in y_pos], filtered_df["days_of_stock"], height=0.3, label="Days of Stock on Hand", color="#F39C12")
-        ax2.barh([y + 0.15 for y in y_pos], filtered_df["lead_time_days"], height=0.3, label="Supplier Lead Time (Days)", color="#9B59B6")
+        ax2.barh([y - 0.15 for y in y_pos], filtered_df["days_of_stock"], height=0.3, label="Days of Stock on Hand", color="#f59e0b")
+        ax2.barh([y + 0.15 for y in y_pos], filtered_df["lead_time_days"], height=0.3, label="Supplier Lead Time (Days)", color="#a855f7")
 
         ax2.set_yticks(y_pos)
-        ax2.set_yticklabels(products_short, fontsize=9)
-        ax2.set_xlabel("Days", fontsize=10)
-        ax2.set_title("Stock Coverage vs. Supplier Lead Time (Days)", fontsize=11, fontweight="bold")
-        ax2.grid(axis="x", linestyle="--", alpha=0.3)
+        ax2.set_yticklabels(products_short, fontsize=9, color="white")
+        ax2.set_xlabel("Days", fontsize=10, color="white")
+        ax2.set_title("Stock Coverage vs. Supplier Lead Time (Days)", fontsize=11, fontweight="bold", color="white")
+        ax2.grid(axis="x", linestyle="--", alpha=0.25)
         ax2.legend(loc="lower right", fontsize=9)
+        ax2.set_facecolor("#0e1117")
+        ax2.tick_params(colors="white")
 
+        fig.patch.set_facecolor("#0e1117")
         plt.tight_layout()
         st.pyplot(fig)
+        plt.close(fig)
         st.caption("🔴 When Days of Stock on Hand < Supplier Lead Time, stockout risk is severe before new shipments can arrive.")
     else:
         st.info("No products match the selected filters.")
@@ -250,18 +259,22 @@ with tab3:
             c_left, c_right = st.columns([3, 1])
             with c_left:
                 fig_f, ax_f = plt.subplots(figsize=(11, 4.5))
-                ax_f.plot(prod_forecast["date"], prod_forecast["yhat"], color="#1ABC9C", marker="o", markersize=4, lw=2, label="Forecast Demand (yhat)")
+                ax_f.plot(prod_forecast["date"], prod_forecast["yhat"], color="#14b8a6", marker="o", markersize=4, lw=2, label="Forecast Demand (yhat)")
                 avg_d = prod_forecast["yhat"].mean()
-                ax_f.axhline(avg_d, color="#F1C40F", linestyle="--", label=f"Average Demand ({avg_d:.1f} units/day)")
+                ax_f.axhline(avg_d, color="#f59e0b", linestyle="--", label=f"Average Demand ({avg_d:.1f} units/day)")
                 
-                ax_f.set_title(f"30-Day Forward Demand Curve — {selected_drill_prod}", fontsize=11, fontweight="bold")
-                ax_f.set_xlabel("Date", fontsize=9)
-                ax_f.set_ylabel("Predicted Units", fontsize=9)
-                ax_f.grid(True, linestyle="--", alpha=0.3)
+                ax_f.set_title(f"30-Day Forward Demand Curve — {selected_drill_prod}", fontsize=11, fontweight="bold", color="white")
+                ax_f.set_xlabel("Date", fontsize=9, color="white")
+                ax_f.set_ylabel("Predicted Units", fontsize=9, color="white")
+                ax_f.grid(True, linestyle="--", alpha=0.25)
                 ax_f.legend(loc="upper right", fontsize=9)
-                plt.xticks(rotation=45)
+                ax_f.set_facecolor("#0e1117")
+                fig_f.patch.set_facecolor("#0e1117")
+                plt.xticks(rotation=30, color="white")
+                plt.yticks(color="white")
                 plt.tight_layout()
                 st.pyplot(fig_f)
+                plt.close(fig_f)
             
             with c_right:
                 st.markdown("#### Forecast Summary")
@@ -371,4 +384,4 @@ with tab5:
     st.latex(r"Q = \max\left(0, \; \lceil T - IP \rceil\right)")
 
     st.markdown("---")
-    st.caption("RetailPulse Decision Engine • Module 3 of 4: Inventory Optimization")
+    st.caption("RetailPulse Decision Engine • Module 4 of 4: Inventory Replenishment")

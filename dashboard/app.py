@@ -23,13 +23,14 @@ st.set_page_config(
 
 st.title("🛍️ RetailPulse — AI-Powered Retail Analytics Platform")
 st.caption(
-    "End-to-End Decision Support: Customer Segmentation · Demand Forecasting · "
-    "Inventory Replenishment · Churn Prediction"
+    "Enterprise Decision Support: Sales Analytics · Customer Intelligence & Churn · "
+    "Demand Forecasting · Inventory Replenishment"
 )
 
 st.markdown("""
-Welcome to **RetailPulse**. This enterprise dashboard brings together machine learning models 
-and operational research to optimize customer retention, anticipate product demand, and prevent costly stockouts.
+Welcome to **RetailPulse**. This enterprise dashboard brings together machine learning models, 
+statistical time-series forecasting, and operational research to maximize revenue, preserve customer lifetime value, 
+anticipate demand velocity, and prevent costly inventory stockouts.
 """)
 
 st.markdown("---")
@@ -45,12 +46,21 @@ recommendations_file = DATA_DIR / "inventory_recommendations.csv"
 prophet_file = DATA_DIR / "prophet_test_predictions.csv"
 churn_metrics_file = REPORT_DIR / "churn_metrics.json"
 churn_predictions_file = DATA_DIR / "churn_customer_predictions.csv"
+transactions_file = DATA_DIR / "transactions_clean.csv"
 
-n_cust, tot_rev = 4338, 8911408
+tot_rev, tot_units = 8911408, 5176450
+if transactions_file.exists():
+    try:
+        t_summary = pd.read_csv(transactions_file, usecols=["Revenue", "Quantity"])
+        tot_rev = float(t_summary["Revenue"].sum())
+        tot_units = int(t_summary["Quantity"].sum())
+    except Exception:
+        pass
+
+n_cust = 4338
 if customer_file.exists():
     c_df = pd.read_csv(customer_file)
     n_cust = len(c_df)
-    tot_rev = c_df["monetary"].sum()
 
 p_wape, p_mae = 74.76, 108.44
 if prophet_file.exists():
@@ -77,9 +87,9 @@ if churn_predictions_file.exists():
 
 col1, col2, col3, col4, col5 = st.columns(5)
 with col1:
-    st.metric("Total Customers Analysed", f"{n_cust:,}", "4 Behavioural Segments")
+    st.metric("Total Revenue Tracked", f"£{tot_rev:,.0f}", f"{tot_units:,.0f} units sold")
 with col2:
-    st.metric("Total Revenue Tracked", f"£{tot_rev:,.0f}", "UK Retail (GBP)")
+    st.metric("Total Customers Analysed", f"{n_cust:,}", "4 Behavioural Segments")
 with col3:
     st.metric("Prophet Forecast WAPE", f"{p_wape:.1f}%", "-6.6 pp vs. Baseline", delta_color="normal")
 with col4:
@@ -89,7 +99,7 @@ with col5:
         st.metric(
             "Churn Model ROC-AUC",
             f"{churn_roc_auc:.4f}",
-            f"{churn_high_risk:,} high-risk (test cohort)" if churn_high_risk is not None else "(test set)",
+            f"{churn_high_risk:,} high-risk (test set)" if churn_high_risk is not None else "(test set)",
             delta_color="off",
         )
     else:
@@ -98,52 +108,56 @@ with col5:
 st.markdown("---")
 
 # -----------------------------------------------------------------------------
-# Platform Navigation Cards
+# Platform Navigation Cards (Ordered 1 to 4)
 # -----------------------------------------------------------------------------
-st.subheader("🧭 Platform Modules")
+st.subheader("🧭 Platform Navigation & Modules")
 
 c_mod1, c_mod2 = st.columns(2)
 c_mod3, c_mod4 = st.columns(2)
 
 with c_mod1:
     st.info(
-        "### 👥 1. Customer Segmentation\n"
-        "**RFM + K-Means Clustering**\n\n"
-        "- Analyses 4,338 customer behavioural records\n"
-        "- Discovers Champions, Loyal, At-Risk, and Inactive cohorts\n"
-        "- Interactive Customer Explorer with real-time filters and CSV export\n\n"
-        "👉 *Navigate to **1 Customer Segmentation** in the sidebar.*"
+        "### 💰 Page 1 — Sales Dashboard\n"
+        "**Revenue Trends & Product Velocity**\n\n"
+        "- Historical revenue trends (daily, weekly, monthly, and moving averages)\n"
+        "- Top products by revenue and sales volume\n"
+        "- Country-level market analytics (UK vs 37 International export markets)\n"
+        "- Interactive date range, country, and product substring filters\n"
     )
+    st.page_link("pages/1_Sales_Dashboard.py", label="Open Page 1: Sales Dashboard", icon="💰")
 
 with c_mod2:
     st.success(
-        "### 📈 2. Demand Forecasting\n"
-        "**Meta Prophet vs. Seasonal Baseline**\n\n"
-        "- Evaluates 42-day holdout test window\n"
-        "- Compares MAE and WAPE against Seasonal-Naïve benchmark\n"
-        "- Generates 30-day forward demand projections\n\n"
-        "👉 *Navigate to **2 Demand Forecasting** in the sidebar.*"
+        "### 👥 Page 2 — Customer Dashboard\n"
+        "**RFM Segmentation & Churn Prediction**\n\n"
+        "- K-Means RFM clustering: Champions, Loyal, At-Risk, and Inactive\n"
+        "- XGBoost churn prediction engine with ROC-AUC 0.7422\n"
+        "- SHAP explainability: feature importance ranking and beeswarm plot\n"
+        "- Customer 360° individual risk lookup with probability gauge\n"
     )
+    st.page_link("pages/2_Customer_Dashboard.py", label="Open Page 2: Customer Dashboard", icon="👥")
 
 with c_mod3:
     st.warning(
-        "### 📦 3. Inventory Optimization\n"
-        "**Target Stock & Reorder Point Policy**\n\n"
-        "- Reorder Point ($ROP$) & Target Stock ($T$) formulas\n"
-        "- Evaluates physical stock coverage against supplier lead times\n"
-        "- Includes What-If Simulator for lead-time and stock-level scenarios\n\n"
-        "👉 *Navigate to **3 Inventory Optimization** in the sidebar.*"
+        "### 📈 Page 3 — Forecast Dashboard\n"
+        "**Meta Prophet vs. Baseline Benchmark**\n\n"
+        "- Rigorous evaluation on 42-day holdout test window\n"
+        "- Compares MAE and WAPE against Seasonal-Naïve benchmark\n"
+        "- Visual evaluation overlay and anomaly diagnostics\n"
+        "- 30-day forward demand projections by SKU for procurement\n"
     )
+    st.page_link("pages/3_Forecast_Dashboard.py", label="Open Page 3: Forecast Dashboard", icon="📈")
 
 with c_mod4:
     st.error(
-        "### 🔮 4. Churn Prediction\n"
-        "**XGBoost Classifier + SHAP Interpretability**\n\n"
-        "- Identifies customers at risk of disengaging (60-day churn window)\n"
-        "- Risk-tier filtering (High / Medium / Low) with CSV export\n"
-        "- SHAP feature importance explains individual predictions\n\n"
-        "👉 *Navigate to **4 Churn Prediction** in the sidebar.*"
+        "### 📦 Page 4 — Inventory Dashboard\n"
+        "**Target Stock Policy & Reorder Optimization**\n\n"
+        "- Continuous-review $(s, S)$ Target Stock & Reorder Point formulas\n"
+        "- Physical stock coverage vs. supplier lead times\n"
+        "- Actionable alerts: REORDER_NOW, MONITOR, NO_REORDER\n"
+        "- Interactive What-If Simulator for lead-time delays and demand surges\n"
     )
+    st.page_link("pages/4_Inventory_Dashboard.py", label="Open Page 4: Inventory Dashboard", icon="📦")
 
 st.markdown("---")
 
@@ -152,7 +166,7 @@ st.markdown("---")
 # -----------------------------------------------------------------------------
 st.subheader("ℹ️ System Architecture & Data Notes")
 st.markdown("""
-* **Customer & Sales History:** Built on 524,000+ validated transaction rows from the UCI Online Retail dataset (2009–2011, UK-based).
+* **Customer & Sales History:** Built on 524,000+ validated transaction rows from the UCI Online Retail dataset (2010–2011, UK-based).
 * **Forecasting Engine:** Meta Prophet configured with additive weekly seasonality and trend changepoint detection. 
   WAPE 74.76% on the 42-day holdout — the assignment target of MAPE ≤ 12% has **not yet been demonstrated**.
 * **Simulated Inventory Notice:** Current stock levels, supplier lead times, and backorders are explicitly simulated 
