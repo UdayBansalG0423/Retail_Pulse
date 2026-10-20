@@ -1,0 +1,37 @@
+# Git & CI/CD
+.git
+.github
+.gitignore
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+# Python bytecode & caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Notebooks & MLflow
+.ipynb_checkpoints/
+notebooks/
+mlruns/
+
+# Large raw datasets (downloaded on demand if needed)
+data/raw/*
+
+# Documentation media & artifacts
+docs/assets/*.mp4
+docs/assets/*.webp
+*.log
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

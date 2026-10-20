@@ -408,7 +408,7 @@ with tab2:
 with tab3:
     st.subheader("Geographic Revenue & Market Distribution")
     
-    country_summary = df_filtered.groupby("Country").agg(
+    country_summary = df_filtered.groupby("Country", observed=False).agg(
         Revenue=("Revenue", "sum"),
         Units=("Quantity", "sum"),
         Transactions=("Revenue", "count"),

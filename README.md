@@ -197,7 +197,7 @@ Ran 19 tests in ~0.03s
 OK (skipped=3)
 ```
 
-### 4 · Launch the dashboard
+### 4 · Launch the dashboard locally
 
 ```bash
 streamlit run dashboard/app.py
@@ -208,6 +208,45 @@ Open **http://localhost:8501** in your browser. All four pages appear in the sid
 - **Page 2: Customer Dashboard**
 - **Page 3: Forecast Dashboard**
 - **Page 4: Inventory Dashboard**
+
+---
+
+## 🐳 Docker Deployment (Lightweight & Memory-Optimized)
+
+RetailPulse includes a production-ready, lightweight Docker containerization setup configured for low memory consumption and instant cloud deployments (Render, AWS ECS, GCP Cloud Run, Railway, or local Docker Desktop):
+
+### Quickstart with Docker Compose
+
+```bash
+docker compose up -d
+```
+Access the dashboard at **http://localhost:8501**.
+
+### Manual Build & Run
+
+```bash
+# Build the lightweight slim image (~450MB total layer size)
+docker build -t retailpulse:latest .
+
+# Run container with resource caps (1.5GB RAM ceiling, 2 CPU cores)
+docker run -d \
+  -p 8501:8501 \
+  --name retailpulse_app \
+  --memory=1.5g \
+  --cpus=2.0 \
+  retailpulse:latest
+```
+
+### ⚡ Container Optimizations Implemented
+
+| Optimization | Implementation | Technical Advantage |
+|---|---|---|
+| **Base Image** | `python:3.11-slim-bookworm` | Cuts image size from >1.2GB down to ~130MB base Debian layer |
+| **Memory Allocator** | `MALLOC_TRIM_THRESHOLD_=65536` | Forces glibc to aggressively return unused heap memory back to host OS |
+| **Thread Pool Bounds** | `OMP_NUM_THREADS=2` | Prevents XGBoost and NumPy from over-allocating parallel thread memory pools |
+| **Watcher Overhead** | `fileWatcherType = "none"` | Disables inotify polling daemon, saving CPU cycles in production |
+| **Container Security** | `USER appuser` (UID 1000) | Drops root privileges for enterprise container compliance |
+| **Health Monitoring** | Built-in `HEALTHCHECK` | Probes `/_stcore/health` every 30s for automatic container restarts |
 
 ---
 
