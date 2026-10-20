@@ -106,6 +106,37 @@ def calculate_inventory_metrics(
     # 1. Inventory Position
     ip = current_stock + on_order - backorders
 
+    # Explicit handling for zero-demand forecasts
+    if avg_daily_demand == 0.0:
+        rop = safety_stock
+        target_stock = safety_stock
+        suggested_order = max(0, math.ceil(target_stock - ip))
+        days_of_stock = 999.0
+        if ip < safety_stock:
+            action = "REORDER_NOW"
+            urgency = "HIGH"
+            rationale = (
+                f"Zero daily demand forecasted. Inventory position ({ip:.0f}) is below "
+                f"safety stock ({safety_stock:.0f}). Order {suggested_order} units to replenish safety buffer."
+            )
+        else:
+            action = "NO_REORDER"
+            urgency = "LOW"
+            rationale = (
+                f"Zero daily demand forecasted and inventory position ({ip:.0f}) meets safety stock ({safety_stock:.0f}). "
+                "No reorder required."
+            )
+        return {
+            "inventory_position": ip,
+            "reorder_point": rop,
+            "target_stock": target_stock,
+            "suggested_order_qty": suggested_order,
+            "days_of_stock": days_of_stock,
+            "action": action,
+            "urgency": urgency,
+            "rationale": rationale,
+        }
+
     # 2. Reorder Point (ROP)
     rop = (avg_daily_demand * lead_time_days) + safety_stock
 
@@ -116,7 +147,7 @@ def calculate_inventory_metrics(
     suggested_order = max(0, math.ceil(target_stock - ip))
 
     # 5. Days of Stock Coverage (physical on-hand stock)
-    days_of_stock = round(current_stock / avg_daily_demand, 1) if avg_daily_demand > 0 else 999.0
+    days_of_stock = round(current_stock / avg_daily_demand, 1)
 
     # 6. Action Rule & Priority
     if ip <= rop:
@@ -175,6 +206,11 @@ def compute_recommendations(forecast_df: pd.DataFrame, inventory_df: pd.DataFram
 
     for _, row in merged.iterrows():
         prod = row["product"]
+        f_days = int(row["forecast_days"])
+        if f_days != 30:
+            raise ValueError(
+                f"Product '{prod}' has {f_days} forecast days, expected exactly 30 days."
+            )
         metrics = calculate_inventory_metrics(
             current_stock=float(row["current_stock"]),
             on_order=float(row["on_order"]),

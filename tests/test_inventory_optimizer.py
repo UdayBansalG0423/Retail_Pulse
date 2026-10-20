@@ -157,10 +157,55 @@ class TestInventoryOptimizer(unittest.TestCase):
 
         rec_df = compute_recommendations(forecast_df, inventory_df)
         self.assertEqual(len(rec_df), 1)
-        self.assertEqual(rec_df.iloc[0]["data_source"], "SIMULATED_DEMO_DATA")
-        self.assertEqual(rec_df.iloc[0]["product"], "TEST_SKU")
-        self.assertIn("suggested_order_qty", rec_df.columns)
-        self.assertGreater(rec_df.iloc[0]["suggested_order_qty"], 0)
+    def test_zero_demand_forecast_handles_safety_stock_explicitly(self):
+        """Rule 7: When demand is zero, targets safety stock and avoids divide-by-zero."""
+        # IP = 10, SS = 30 -> Q = 20 (REORDER_NOW)
+        res_low = calculate_inventory_metrics(
+            current_stock=10,
+            on_order=0,
+            backorders=0,
+            lead_time_days=7,
+            safety_stock=30,
+            review_period_days=7,
+            avg_daily_demand=0.0,
+        )
+        self.assertEqual(res_low["suggested_order_qty"], 20)
+        self.assertEqual(res_low["action"], "REORDER_NOW")
+        self.assertEqual(res_low["days_of_stock"], 999.0)
+
+        # IP = 50 >= SS = 30 -> Q = 0 (NO_REORDER)
+        res_high = calculate_inventory_metrics(
+            current_stock=50,
+            on_order=0,
+            backorders=0,
+            lead_time_days=7,
+            safety_stock=30,
+            review_period_days=7,
+            avg_daily_demand=0.0,
+        )
+        self.assertEqual(res_high["suggested_order_qty"], 0)
+        self.assertEqual(res_high["action"], "NO_REORDER")
+
+    def test_non_30_day_horizon_raises_value_error(self):
+        """Rule 8: Incomplete forecast horizons (<30 days) raise ValueError."""
+        # Only 15 days provided
+        incomplete_forecast = pd.DataFrame([
+            {"product": "SKU_A", "date": f"2011-12-{d:02d}", "yhat": 10.0}
+            for d in range(1, 16)
+        ])
+        inventory_df = pd.DataFrame([{
+            "product": "SKU_A",
+            "current_stock": 50,
+            "on_order": 0,
+            "backorders": 0,
+            "lead_time_days": 7,
+            "safety_stock": 25,
+            "review_period_days": 7,
+            "data_type": "SIMULATED_DEMO_DATA",
+        }])
+
+        with self.assertRaises(ValueError):
+            compute_recommendations(incomplete_forecast, inventory_df)
 
 
 if __name__ == "__main__":

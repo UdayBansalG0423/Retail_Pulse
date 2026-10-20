@@ -132,16 +132,22 @@ def chart_rfm_profiles(summary: pd.DataFrame):
 
     for i, (label, col) in enumerate(cols.items()):
         values = summary[col].values
-        norm = values / values.max()
+        if col == "median_recency_days":
+            # Invert recency so higher bar = more recent (favorable)
+            norm = (values.max() - values) / (values.max() - values.min() + 1e-9)
+            display_label = "Recency Score (Higher = More Recent)"
+        else:
+            norm = values / values.max()
+            display_label = label
         ax.bar(x + i * width - width, norm, width,
-               label=label, color=bar_colors[i], edgecolor="white", alpha=0.9)
+               label=display_label, color=bar_colors[i], edgecolor="white", alpha=0.9)
 
     ax.set_xticks(x)
     ax.set_xticklabels(segments, fontsize=10, rotation=10, ha="right")
-    ax.set_ylabel("Normalised value (0 = min, 1 = max)", fontsize=11)
-    ax.set_title("Median RFM Profiles by Segment", fontsize=13,
+    ax.set_ylabel("Normalised Score (Higher is better across R, F, M)", fontsize=11)
+    ax.set_title("Median RFM Profiles by Segment (Higher = Better)", fontsize=13,
                  fontweight="bold", pad=12)
-    ax.legend(fontsize=10)
+    ax.legend(fontsize=9, loc="upper right")
     ax.set_ylim(0, 1.15)
     ax.spines[["top", "right"]].set_visible(False)
     ax.grid(axis="y", linestyle="--", alpha=0.4)

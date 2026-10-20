@@ -33,7 +33,9 @@ st.title("👥 Customer Segmentation (RFM + K-Means)")
 st.caption("AI-powered customer behavioral clustering on UK retail transaction data.")
 
 
-@st.cache_data(show_spinner=False)
+import math
+
+@st.cache_data(ttl=60, show_spinner=False)
 def load_data():
     if not CUSTOMER_FILE.exists() or not SUMMARY_FILE.exists():
         raise FileNotFoundError("Processed segmentation CSVs not found.")
@@ -60,7 +62,8 @@ selected_segments = st.sidebar.multiselect(
     default=segment_options,
 )
 
-recency_min, recency_max = int(customers_df["recency"].min()), int(customers_df["recency"].max())
+recency_min = int(math.floor(customers_df["recency"].min()))
+recency_max = int(math.ceil(customers_df["recency"].max()))
 recency_range = st.sidebar.slider(
     "Recency (days)",
     min_value=recency_min,
@@ -69,7 +72,8 @@ recency_range = st.sidebar.slider(
     step=1,
 )
 
-freq_min, freq_max = int(customers_df["frequency"].min()), int(customers_df["frequency"].max())
+freq_min = int(math.floor(customers_df["frequency"].min()))
+freq_max = int(math.ceil(customers_df["frequency"].max()))
 frequency_range = st.sidebar.slider(
     "Frequency (purchase dates)",
     min_value=freq_min,
@@ -78,7 +82,8 @@ frequency_range = st.sidebar.slider(
     step=1,
 )
 
-monetary_min, monetary_max = int(customers_df["monetary"].min()), int(customers_df["monetary"].max())
+monetary_min = int(math.floor(customers_df["monetary"].min()))
+monetary_max = int(math.ceil(customers_df["monetary"].max()))
 monetary_range = st.sidebar.slider(
     "Monetary (Spend £)",
     min_value=monetary_min,

@@ -44,7 +44,7 @@ st.warning(
 )
 
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(ttl=60, show_spinner=False)
 def load_inventory_data():
     if not RECOMMENDATIONS_FILE.exists():
         return None, None
@@ -83,14 +83,17 @@ selected_products = st.sidebar.multiselect(
     default=product_options,
 )
 
+if not selected_products:
+    st.warning("⚠️ No products selected. Please select at least one product from the sidebar to view recommendations.")
+    st.stop()
+
 # Apply filters
 filtered_df = rec_df.copy()
 if selected_urgency != "All":
     filtered_df = filtered_df[filtered_df["urgency"] == selected_urgency]
 if selected_action != "All":
     filtered_df = filtered_df[filtered_df["action"] == selected_action]
-if selected_products:
-    filtered_df = filtered_df[filtered_df["product"].isin(selected_products)]
+filtered_df = filtered_df[filtered_df["product"].isin(selected_products)]
 
 # -----------------------------------------------------------------------------
 # Top Metric KPI Cards
@@ -115,10 +118,11 @@ st.markdown("---")
 # -----------------------------------------------------------------------------
 # Tabbed Interface
 # -----------------------------------------------------------------------------
-tab1, tab2, tab3, tab4 = st.tabs([
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
     "📋 Recommendations & Orders",
     "📊 Stock vs ROP Comparison",
     "📈 30-Day Demand Drilldown",
+    "🔬 What-If Simulator",
     "📐 Methodology & Formulas",
 ])
 
@@ -271,9 +275,70 @@ with tab3:
         st.info("Forecast data not loaded.")
 
 # -----------------------------------------------------------------------------
-# Tab 4: Methodology & Formulas
+# Tab 4: What-If Simulator
 # -----------------------------------------------------------------------------
 with tab4:
+    st.subheader("🔬 Interactive What-If Scenario Simulator")
+    st.markdown("Stress-test supply chain assumptions: simulate supplier delivery delays, demand surges, or buffer adjustments.")
+
+    sim_prod = st.selectbox("Select Product to Simulate:", rec_df["product"].tolist(), key="what_if_prod")
+    p_row = rec_df[rec_df["product"] == sim_prod].iloc[0]
+
+    sc1, sc2, sc3 = st.columns(3)
+    with sc1:
+        sim_lead_time = st.slider(
+            "Simulated Lead Time (days)",
+            min_value=1,
+            max_value=30,
+            value=int(p_row["lead_time_days"]),
+            help="Simulate supplier delays or expedited shipments.",
+        )
+    with sc2:
+        sim_safety_mult = st.slider(
+            "Safety Stock Multiplier",
+            min_value=0.2,
+            max_value=3.0,
+            value=1.0,
+            step=0.1,
+            help="Scale safety stock buffer up or down.",
+        )
+    with sc3:
+        sim_demand_mult = st.slider(
+            "Demand Surge Multiplier",
+            min_value=0.5,
+            max_value=3.0,
+            value=1.0,
+            step=0.1,
+            help="Simulate marketing campaign or seasonal sales surge.",
+        )
+
+    # Recalculate scenario metrics
+    sim_d = p_row["avg_daily_demand"] * sim_demand_mult
+    sim_ss = p_row["safety_stock"] * sim_safety_mult
+    sim_rop = (sim_d * sim_lead_time) + sim_ss
+    sim_target = sim_d * (sim_lead_time + p_row["review_period_days"]) + sim_ss
+    sim_ip = p_row["inventory_position"]
+    sim_order = max(0, math.ceil(sim_target - sim_ip))
+    sim_action = "REORDER_NOW" if sim_ip <= sim_rop else ("MONITOR" if sim_ip <= sim_rop * 1.2 else "NO_REORDER")
+
+    st.markdown("#### Scenario Impact vs. Current Baseline")
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        st.metric("Avg Daily Demand", f"{sim_d:.1f} u/day", delta=f"{sim_d - p_row['avg_daily_demand']:+.1f}")
+    with m2:
+        st.metric("Reorder Point (ROP)", f"{sim_rop:.1f} units", delta=f"{sim_rop - p_row['reorder_point']:+.1f}")
+    with m3:
+        st.metric("Target Stock (T)", f"{sim_target:.1f} units", delta=f"{sim_target - p_row['target_stock']:+.1f}")
+    with m4:
+        st.metric("Suggested Order (Q)", f"{sim_order:,} units", delta=f"{sim_order - p_row['suggested_order_qty']:+d}")
+
+    status_icon = "🔴" if sim_action == "REORDER_NOW" else ("🟡" if sim_action == "MONITOR" else "🟢")
+    st.info(f"**Simulated Decision Action:** {status_icon} **{sim_action}** (Baseline was: `{p_row['action']}`)")
+
+# -----------------------------------------------------------------------------
+# Tab 5: Methodology & Formulas
+# -----------------------------------------------------------------------------
+with tab5:
     st.subheader("Replenishment Methodology & Policy Specifications")
     
     st.markdown("""
