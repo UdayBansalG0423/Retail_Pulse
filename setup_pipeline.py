@@ -26,6 +26,14 @@ import sys
 import textwrap
 from pathlib import Path
 
+# Fix console encoding on Windows to avoid UnicodeEncodeError in CP1252
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 ROOT = Path(__file__).resolve().parent
 
 
@@ -33,14 +41,14 @@ def run(script: str, label: str) -> bool:
     """Run a pipeline script and return True on success."""
     path = ROOT / script
     if not path.exists():
-        print(f"  ⚠️  {label}: script not found at {script} — skipping")
+        print(f"  [!] {label}: script not found at {script} -- skipping")
         return False
-    print(f"  ▶  {label} ...", flush=True)
+    print(f"  [>] {label} ...", flush=True)
     result = subprocess.run([sys.executable, str(path)], capture_output=False)
     if result.returncode != 0:
-        print(f"  ❌ {label} FAILED (exit {result.returncode})")
+        print(f"  [X] {label} FAILED (exit {result.returncode})")
         return False
-    print(f"  ✅ {label} done")
+    print(f"  [OK] {label} done")
     return True
 
 
@@ -67,50 +75,56 @@ def main():
     parser.add_argument("--skip-churn", action="store_true", help="Skip churn prediction stage")
     args = parser.parse_args()
 
-    print("\n═══════════════════════════════════════════")
-    print("  RetailPulse — Pipeline Setup")
-    print("═══════════════════════════════════════════\n")
+    print("\n===========================================")
+    print("  RetailPulse -- Pipeline Setup")
+    print("===========================================\n")
 
-    # ── Stage 1: Data ingestion ───────────────────────────────────────────────
-    print("Stage 1 · Data ingestion & cleaning")
-    run("src/data/ingest_data.py", "Ingest & validate UCI Online Retail dataset")
+    # -- Stage 1: Data ingestion & cleaning ------------------------------------
+    print("Stage 1 - Data ingestion & cleaning")
+    raw_file = ROOT / "data" / "raw" / "online_retail.csv"
+    if not raw_file.exists():
+        run("src/data/download_dataset.py", "Download UCI Online Retail dataset")
+    clean_file = ROOT / "data" / "processed" / "transactions_clean.csv"
+    if not clean_file.exists():
+        run("src/data/clean_dataset.py", "Clean raw transactions dataset")
+    run("src/data/validate_dataset.py", "Validate clean transactions dataset")
 
-    # ── Stage 2: Segmentation ─────────────────────────────────────────────────
-    print("\nStage 2 · Customer segmentation")
+    # -- Stage 2: Segmentation -------------------------------------------------
+    print("\nStage 2 - Customer segmentation")
     run("src/segmentation/rfm_segmentation.py", "RFM feature engineering + K-Means")
     run("src/segmentation/label_and_visualize.py", "Segment labelling & visualisations")
 
-    # ── Stage 3: Forecasting ──────────────────────────────────────────────────
-    print("\nStage 3 · Demand forecasting")
+    # -- Stage 3: Forecasting --------------------------------------------------
+    print("\nStage 3 - Demand forecasting")
     if args.skip_forecast:
-        print("  ⏭  Skipped (--skip-forecast)")
+        print("  [>] Skipped (--skip-forecast)")
     elif not check_import("prophet"):
-        print("  ⚠️  prophet not installed — skipping (pip install prophet)")
+        print("  [!] prophet not installed -- skipping (pip install prophet)")
     else:
         run("src/forecasting/prepare_sales.py", "Prepare daily sales time series")
-        run("src/forecasting/forecast_baseline.py", "Seasonal-Naïve baseline")
+        run("src/forecasting/forecast_baseline.py", "Seasonal-Naive baseline")
         run("src/forecasting/prophet_forecast.py", "Meta Prophet training & holdout eval")
         run("src/forecasting/generate_future_forecast.py", "30-day forward projections")
 
-    # ── Stage 4: Inventory ────────────────────────────────────────────────────
-    print("\nStage 4 · Inventory optimisation")
+    # -- Stage 4: Inventory ----------------------------------------------------
+    print("\nStage 4 - Inventory optimisation")
     run("src/inventory/create_sample_inventory.py", "Generate simulated inventory inputs")
     run("src/inventory/inventory_optimizer.py", "Compute ROP, Target Stock & orders")
 
-    # ── Stage 5: Churn prediction ─────────────────────────────────────────────
-    print("\nStage 5 · Churn prediction")
+    # -- Stage 5: Churn prediction ---------------------------------------------
+    print("\nStage 5 - Churn prediction")
     if args.skip_churn:
-        print("  ⏭  Skipped (--skip-churn)")
+        print("  [>] Skipped (--skip-churn)")
     elif not (check_import("xgboost") and check_import("shap")):
-        print("  ⚠️  xgboost / shap not installed — skipping (pip install xgboost shap)")
+        print("  [!] xgboost / shap not installed -- skipping (pip install xgboost shap)")
     else:
         run("src/churn/churn_prediction.py", "XGBoost training + SHAP interpretability")
 
-    # ── Summary ───────────────────────────────────────────────────────────────
-    print("\n═══════════════════════════════════════════")
-    print("  Pipeline complete — launch dashboard with:")
+    # -- Summary ---------------------------------------------------------------
+    print("\n===========================================")
+    print("  Pipeline complete -- launch dashboard with:")
     print("    streamlit run dashboard/app.py")
-    print("═══════════════════════════════════════════\n")
+    print("===========================================\n")
 
 
 if __name__ == "__main__":

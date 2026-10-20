@@ -1,0 +1,5 @@
+product,current_stock,on_order,backorders,inventory_position,lead_time_days,safety_stock,review_period_days,forecast_days,avg_daily_demand,days_of_stock,reorder_point,target_stock,suggested_order_qty,action,urgency,rationale,data_source
+WHITE HANGING HEART T-LIGHT HOLDER,250,0,0,250,7,100,7,30,91.41,2.7,739.9,1379.7,1130,REORDER_NOW,HIGH,Inventory position (250) is at or below ROP (739.9). Order 1130 units immediately to avoid stockout during lead time.,SIMULATED
+REGENCY CAKESTAND 3 TIER,450,50,0,500,14,40,7,30,28.83,15.6,443.7,645.5,146,MONITOR,MEDIUM,Inventory position (500) is within 20% of ROP (443.7). Prepare replenishment order for next review cycle.,SIMULATED
+JUMBO BAG RED RETROSPOT,500,0,30,470,10,150,7,30,173.3,2.9,1883.0,3096.2,2627,REORDER_NOW,HIGH,Inventory position (470) is at or below ROP (1883.0). Order 2627 units immediately to avoid stockout during lead time.,SIMULATED
+ASSORTED COLOUR BIRD ORNAMENT,2500,0,0,2500,7,100,7,30,138.77,18.0,1071.4,2042.7,0,NO_REORDER,LOW,Stock levels sufficient (18.0 days coverage). Inventory position (2500) comfortably exceeds ROP (1071.4). No order needed.,SIMULATED

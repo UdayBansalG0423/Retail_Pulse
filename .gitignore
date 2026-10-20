@@ -8,9 +8,10 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Data — raw and large processed files excluded; demo artifacts committed separately
+# Data — raw files excluded (download on demand); processed datasets tracked for live deployment
 data/raw/*
-data/processed/*
+!data/processed/
+!data/processed/*
 
 # Reports — SHAP and other generated images/CSVs tracked (small)
 !reports/churn/

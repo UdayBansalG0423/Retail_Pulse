@@ -13,9 +13,10 @@ else
     echo "✅ Processed datasets and ML models verified."
 fi
 
-echo "🚀 Starting Streamlit production server on http://0.0.0.0:8501..."
+PORT="${PORT:-8501}"
+echo "🚀 Starting Streamlit production server on http://0.0.0.0:${PORT}..."
 exec streamlit run dashboard/app.py \
-    --server.port=8501 \
+    --server.port="${PORT}" \
     --server.address=0.0.0.0 \
     --server.headless=true \
     --server.fileWatcherType=none \

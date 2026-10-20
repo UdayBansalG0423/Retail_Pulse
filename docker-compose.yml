@@ -3,7 +3,6 @@
 # Single-command deployment with resource caps and automatic recovery
 # ==============================================================================
 
-version: "3.8"
 
 services:
   retailpulse:

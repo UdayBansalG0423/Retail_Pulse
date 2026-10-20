@@ -1,0 +1,5 @@
+segment,customer_count,median_recency_days,median_purchase_dates,median_spend_gbp,average_spend_gbp,customer_share_pct
+Champions,711,8.0,9.0,3641.32,7990.595907172997,16.39
+Promising / New,862,19.0,2.0,430.315,507.58777262180973,19.87
+At-Risk Regulars,1188,52.0,4.0,1369.24,1860.2942786195288,27.39
+Inactive / Low Engagement,1577,183.0,1.0,300.85,353.0134438807863,36.35

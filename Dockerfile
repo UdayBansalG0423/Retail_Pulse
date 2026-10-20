@@ -47,8 +47,11 @@ RUN groupadd -g 1000 appgroup && \
 # 6. Copy application source code and pre-trained artifacts
 COPY --chown=appuser:appgroup . /app
 
-# Normalize line endings and permissions for entrypoint script
-RUN dos2unix /app/entrypoint.sh && \
+# Ensure directories exist and grant permissions to appuser
+RUN mkdir -p /app/data/raw /app/data/processed /app/models /app/reports && \
+    chown -R appuser:appgroup /app && \
+    chmod -R 775 /app && \
+    dos2unix /app/entrypoint.sh && \
     chmod +x /app/entrypoint.sh
 
 # 7. Switch to non-root user
