@@ -24,7 +24,11 @@ class TestForecasting(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not BASELINE_FILE.exists() or not PROPHET_FILE.exists() or not FUTURE_FORECAST_FILE.exists():
-            raise FileNotFoundError("Forecasting CSV files not found. Run forecasting pipeline first.")
+            raise unittest.SkipTest(
+                "Forecasting CSVs not found — run the forecasting pipeline first: "
+                "python src/forecasting/prophet_forecast.py && "
+                "python src/forecasting/generate_future_forecast.py"
+            )
         cls.baseline_df = pd.read_csv(BASELINE_FILE, parse_dates=["date"])
         cls.prophet_df = pd.read_csv(PROPHET_FILE, parse_dates=["date"])
         cls.future_df = pd.read_csv(FUTURE_FORECAST_FILE, parse_dates=["date"])

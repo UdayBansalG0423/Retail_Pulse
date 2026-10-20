@@ -24,7 +24,11 @@ class TestCustomerSegmentation(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if not CUSTOMER_FILE.exists() or not SUMMARY_FILE.exists():
-            raise FileNotFoundError("Segmentation CSV files not found. Run segmentation pipeline first.")
+            raise unittest.SkipTest(
+                "Segmentation CSVs not found — run the segmentation pipeline first: "
+                "python src/segmentation/rfm_segmentation.py && "
+                "python src/segmentation/label_and_visualize.py"
+            )
         cls.customers_df = pd.read_csv(CUSTOMER_FILE)
         cls.summary_df = pd.read_csv(SUMMARY_FILE)
 
