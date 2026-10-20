@@ -1,0 +1,22 @@
+{
+  "observation_cutoff": "2011-09-30",
+  "label_window_days": 60,
+  "label_end_date": "2011-11-29",
+  "total_active_customers": 3616,
+  "total_churned_customers": 1908,
+  "overall_churn_rate": 0.5277,
+  "test_holdout_size": 904,
+  "test_churn_rate": 0.5277,
+  "roc_auc": 0.7422,
+  "average_precision_pr_auc": 0.7149,
+  "precision_at_top_20_pct": 0.7514,
+  "lift_at_top_20_pct": 1.42,
+  "brier_score_loss": 0.2034,
+  "top_features": [
+    "frequency_dates",
+    "unique_products",
+    "recency_days",
+    "total_units",
+    "avg_order_value"
+  ]
+}

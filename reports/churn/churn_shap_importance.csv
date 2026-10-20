@@ -1,0 +1,14 @@
+feature,mean_abs_shap
+frequency_dates,0.42754856
+unique_products,0.30458605
+recency_days,0.23120831
+total_units,0.17067902
+avg_order_value,0.13995823
+spend_trend,0.1054202
+purchase_span_days,0.10423414
+tenure_days,0.099319525
+avg_spend_per_item,0.09306539
+avg_units_per_order,0.059759766
+recent_30d_spend,0.047246326
+total_spend,0.045839258
+recent_30d_orders,0.0
