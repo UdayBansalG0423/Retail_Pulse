@@ -20,8 +20,11 @@ import matplotlib.pyplot as plt
 
 plt.style.use("dark_background")
 
-# Path setup: dashboard/pages -> dashboard -> RetailPulse root
+import sys
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "dashboard"))
+from sidebar_theme import apply_sidebar_theme, render_sidebar_footer
+
 DATA_DIR = ROOT / "data" / "processed"
 RECOMMENDATIONS_FILE = DATA_DIR / "inventory_recommendations.csv"
 FORECAST_FILE = DATA_DIR / "forecast_30_day.csv"
@@ -32,6 +35,8 @@ st.set_page_config(
     page_icon="📦",
     layout="wide",
 )
+
+apply_sidebar_theme()
 
 st.title("📦 Inventory Optimization & Replenishment")
 st.caption(
@@ -385,3 +390,5 @@ with tab5:
 
     st.markdown("---")
     st.caption("RetailPulse Decision Engine • Module 4 of 4: Inventory Replenishment")
+
+render_sidebar_footer()

@@ -20,8 +20,11 @@ import matplotlib.pyplot as plt
 
 plt.style.use("dark_background")
 
-# Path setup: dashboard/pages -> dashboard -> RetailPulse root
+import sys
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "dashboard"))
+from sidebar_theme import apply_sidebar_theme, render_sidebar_footer
+
 DATA_DIR = ROOT / "data" / "processed"
 TRANSACTIONS_FILE = DATA_DIR / "transactions_clean.csv"
 
@@ -30,6 +33,8 @@ st.set_page_config(
     page_icon="💰",
     layout="wide",
 )
+
+apply_sidebar_theme()
 
 st.title("💰 Sales Analytics Dashboard")
 st.caption(
@@ -530,3 +535,5 @@ with tab4:
         mime="text/csv",
         help="Export top filtered transactions as CSV",
     )
+
+render_sidebar_footer()

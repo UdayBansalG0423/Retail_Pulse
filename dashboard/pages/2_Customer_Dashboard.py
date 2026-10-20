@@ -24,8 +24,11 @@ import streamlit as st
 
 plt.style.use("dark_background")
 
-# Path setup: dashboard/pages -> dashboard -> RetailPulse root
+import sys
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "dashboard"))
+from sidebar_theme import apply_sidebar_theme, render_sidebar_footer
+
 DATA_DIR = ROOT / "data" / "processed"
 SEGMENT_REPORT_DIR = ROOT / "reports" / "segmentation"
 CHURN_REPORT_DIR = ROOT / "reports" / "churn"
@@ -48,6 +51,8 @@ st.set_page_config(
     page_icon="👥",
     layout="wide",
 )
+
+apply_sidebar_theme()
 
 st.title("👥 Customer Intelligence & Churn Dashboard")
 st.caption(
@@ -552,3 +557,5 @@ with tab_lookup:
                         st.success("✅ **Recommended Action:** Loyal and engaged customer. Focus on cross-selling, loyalty rewards, and product launches.")
                 else:
                     st.info(f"Customer {int(cid)} was not in the 25% held-out test partition for churn scoring.")
+
+render_sidebar_footer()

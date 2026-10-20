@@ -18,8 +18,11 @@ import matplotlib.pyplot as plt
 
 plt.style.use("dark_background")
 
-# Path setup: dashboard/pages -> dashboard -> RetailPulse root
+import sys
 ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(ROOT / "dashboard"))
+from sidebar_theme import apply_sidebar_theme, render_sidebar_footer
+
 DATA_DIR = ROOT / "data" / "processed"
 REPORT_DIR = ROOT / "reports" / "forecasting"
 
@@ -35,6 +38,8 @@ st.set_page_config(
     page_icon="📈",
     layout="wide",
 )
+
+apply_sidebar_theme()
 
 st.title("📈 Demand Forecast Dashboard")
 st.caption(
@@ -218,3 +223,5 @@ with tab4:
         st.dataframe(diag_df, use_container_width=True)
     else:
         st.info("Diagnostics summary generated during pipeline execution.")
+
+render_sidebar_footer()

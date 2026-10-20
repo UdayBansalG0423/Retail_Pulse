@@ -10,7 +10,11 @@ import json
 import pandas as pd
 import streamlit as st
 
+import sys
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "dashboard"))
+from sidebar_theme import apply_sidebar_theme, render_sidebar_footer
+
 DATA_DIR = ROOT / "data" / "processed"
 REPORT_DIR = ROOT / "reports" / "churn"
 
@@ -20,6 +24,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded",
 )
+
+apply_sidebar_theme()
 
 st.title("🛍️ RetailPulse — AI-Powered Retail Analytics Platform")
 st.caption(
@@ -175,3 +181,5 @@ st.markdown("""
   ROC-AUC 0.7422 — the assignment target of 0.88 has **not yet been demonstrated**. 
   Results should not be interpreted as live campaign recommendations for current customers.
 """)
+
+render_sidebar_footer()
